@@ -1,0 +1,25 @@
+{
+  "name": "rip-saw",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx esbuild src/background.js --bundle --outfile=dist/background.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npnchl/rip-saw.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/npnchl/rip-saw/issues"
+  },
+  "homepage": "https://github.com/npnchl/rip-saw#readme",
+  "devDependencies": {
+    "esbuild": "0.25.8",
+    "webextension-polyfill": "^0.12.0"
+  }
+}
