@@ -3,6 +3,7 @@
     "name": "Ripsaw",
     "version": "1.0",
     "permissions": [
+        "storage",
         "declarativeNetRequest"
     ],
     "background": {
