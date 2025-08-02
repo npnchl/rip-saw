@@ -1,30 +1,32 @@
-// vite.config.js
 import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        background: resolve(__dirname, 'src/background.js'),
-      },
-      output: {
-        entryFileNames: 'background.js',
-      },
-    },
-    minify: false, // Optional: disables minification for easier debugging
-  },
   plugins: [
+    svelte(),
     viteStaticCopy({
       targets: [
         {
-          src: 'src/manifest.json',
+          src: 'manifest.json',
           dest: '.'
         }
       ]
     })
-  ]
+  ],
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    minify: false,
+    rollupOptions: {
+      input: {
+        background: resolve(__dirname, 'src/background.js'),
+        options: resolve(__dirname, 'options.html'),
+      },
+      output: {
+        entryFileNames: '[name].js',
+      },
+    },
+  },
 });
