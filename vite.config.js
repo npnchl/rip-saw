@@ -1,6 +1,7 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   build: {
@@ -16,4 +17,14 @@ export default defineConfig({
     },
     minify: false, // Optional: disables minification for easier debugging
   },
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'src/manifest.json',
+          dest: '.'
+        }
+      ]
+    })
+  ]
 });
