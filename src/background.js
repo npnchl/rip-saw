@@ -1,4 +1,4 @@
-var browser = require("webextension-polyfill");
+import browser from "webextension-polyfill";
 
 // initalise storage
 browser.storage.local.clear();

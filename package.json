@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx esbuild src/background.js --bundle --outfile=dist/background.js"
+    "dev": "vite",
+    "build": "vite build && cp src/manifest.json dist/manifest.json"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,7 @@
   },
   "homepage": "https://github.com/npnchl/rip-saw#readme",
   "devDependencies": {
-    "esbuild": "0.25.8",
+    "vite": "^7.0.6",
     "webextension-polyfill": "^0.12.0"
   }
 }
