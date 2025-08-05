@@ -12,6 +12,15 @@
   });
 
   function addRule() {
+    const duplicateRuleIndex = dynamicRules.findIndex(
+      (rule) => rule.condition.urlFilter == filterInput,
+    );
+    
+    if (duplicateRuleIndex != -1) {
+      console.log("Rule already exists");
+      return;
+    }
+
     let ruleIds = dynamicRules.map((rule) => rule.id);
     let largestId = ruleIds.length ? Math.max(...ruleIds) : 0;
 
@@ -46,10 +55,10 @@
     if (ruleIndex == -1) {
       console.log("Couldn't find the rule");
       return;
-    };
+    }
 
     const ruleId = dynamicRules[ruleIndex].id;
-    
+
     browser.declarativeNetRequest
       .updateDynamicRules({
         removeRuleIds: [ruleId],

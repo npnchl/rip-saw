@@ -2547,6 +2547,11 @@ if (typeof window !== "undefined") {
   ((window.__svelte ??= {}).v ??= /* @__PURE__ */ new Set()).add(PUBLIC_VERSION);
 }
 function addRule(_, dynamicRules, filterInput) {
+  const duplicateRuleIndex = get(dynamicRules).findIndex((rule) => rule.condition.urlFilter == get(filterInput));
+  if (duplicateRuleIndex != -1) {
+    console.log("Rule already exists");
+    return;
+  }
   let ruleIds = get(dynamicRules).map((rule) => rule.id);
   let largestId = ruleIds.length ? Math.max(...ruleIds) : 0;
   let newRule = {
