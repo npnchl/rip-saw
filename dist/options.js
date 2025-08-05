@@ -2546,32 +2546,43 @@ const PUBLIC_VERSION = "5";
 if (typeof window !== "undefined") {
   ((window.__svelte ??= {}).v ??= /* @__PURE__ */ new Set()).add(PUBLIC_VERSION);
 }
-function addRule(_, dynamicRules, newFilterInput) {
+function addRule(_, dynamicRules, filterInput) {
   let ruleIds = get(dynamicRules).map((rule) => rule.id);
   let largestId = ruleIds.length ? Math.max(...ruleIds) : 0;
   let newRule = {
     id: largestId + 1,
     priority: 1,
     action: { type: "block" },
-    condition: {
-      urlFilter: get(newFilterInput),
-      resourceTypes: ["main_frame"]
-    }
+    condition: { urlFilter: get(filterInput), resourceTypes: ["main_frame"] }
   };
   browser.declarativeNetRequest.updateDynamicRules({ addRules: [newRule] }).then(() => {
     get(dynamicRules).push(newRule);
-    set(newFilterInput, "");
+    set(filterInput, "");
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+function removeRule(__1, dynamicRules, filterInput) {
+  const ruleIndex = get(dynamicRules).findIndex((rule) => rule.condition.urlFilter == get(filterInput));
+  if (ruleIndex == -1) {
+    console.log("Couldn't find the rule");
+    return;
+  }
+  const ruleId = get(dynamicRules)[ruleIndex].id;
+  browser.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [ruleId] }).then(() => {
+    get(dynamicRules).splice(ruleIndex, 1);
+    set(filterInput, "");
   }).catch((error) => {
     console.log(error);
   });
 }
 var root_1 = /* @__PURE__ */ from_html(`<p> </p>`);
 var root_2 = /* @__PURE__ */ from_html(`<p>No rules set</p>`);
-var root = /* @__PURE__ */ from_html(`<main><h1>Options Page</h1> <!> <div><input placeholder="youtube.com"/> <button>Add</button></div></main>`);
+var root = /* @__PURE__ */ from_html(`<main><h1>Options Page</h1> <!> <div><input placeholder="youtube.com"/> <button>Add</button> <button>Remove</button></div></main>`);
 function Options($$anchor, $$props) {
   push($$props, true);
   let dynamicRules = /* @__PURE__ */ state(proxy([]));
-  let newFilterInput = /* @__PURE__ */ state("");
+  let filterInput = /* @__PURE__ */ state("");
   onMount(() => {
     browser.declarativeNetRequest.getDynamicRules().then((rules) => {
       set(dynamicRules, rules, true);
@@ -2598,8 +2609,10 @@ function Options($$anchor, $$props) {
   var div = sibling(node, 2);
   var input = child(div);
   var button = sibling(input, 2);
-  button.__click = [addRule, dynamicRules, newFilterInput];
-  bind_value(input, () => get(newFilterInput), ($$value) => set(newFilterInput, $$value));
+  button.__click = [addRule, dynamicRules, filterInput];
+  var button_1 = sibling(button, 2);
+  button_1.__click = [removeRule, dynamicRules, filterInput];
+  bind_value(input, () => get(filterInput), ($$value) => set(filterInput, $$value));
   append($$anchor, main);
   pop();
 }

@@ -3,7 +3,7 @@
   import browser from "webextension-polyfill";
 
   let dynamicRules = $state([]);
-  let newFilterInput = $state("");
+  let filterInput = $state("");
 
   onMount(() => {
     browser.declarativeNetRequest.getDynamicRules().then((rules) => {
@@ -20,7 +20,7 @@
       priority: 1,
       action: { type: "block" },
       condition: {
-        urlFilter: newFilterInput,
+        urlFilter: filterInput,
         resourceTypes: ["main_frame"],
       },
     };
@@ -31,7 +31,32 @@
       })
       .then(() => {
         dynamicRules.push(newRule);
-        newFilterInput = "";
+        filterInput = "";
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function removeRule() {
+    const ruleIndex = dynamicRules.findIndex(
+      (rule) => rule.condition.urlFilter == filterInput,
+    );
+
+    if (ruleIndex == -1) {
+      console.log("Couldn't find the rule");
+      return;
+    };
+
+    const ruleId = dynamicRules[ruleIndex].id;
+    
+    browser.declarativeNetRequest
+      .updateDynamicRules({
+        removeRuleIds: [ruleId],
+      })
+      .then(() => {
+        dynamicRules.splice(ruleIndex, 1);
+        filterInput = "";
       })
       .catch((error) => {
         console.log(error);
@@ -49,7 +74,8 @@
   {/each}
 
   <div>
-    <input placeholder="youtube.com" bind:value={newFilterInput} />
+    <input placeholder="youtube.com" bind:value={filterInput} />
     <button onclick={addRule}>Add</button>
+    <button onclick={removeRule}>Remove</button>
   </div>
 </main>
