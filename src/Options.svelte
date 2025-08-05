@@ -1,72 +1,55 @@
 <script>
+  import { onMount } from "svelte";
   import browser from "webextension-polyfill";
 
-  let filters = $state();
-  let newFilterInput = $state();
+  let dynamicRules = $state([]);
+  let newFilterInput = $state("");
 
-  browser.declarativeNetRequest.getDynamicRules().then((rules) => {
-    filters = rules.map((rule) => rule.condition.urlFilter);
+  onMount(() => {
+    browser.declarativeNetRequest.getDynamicRules().then((rules) => {
+      dynamicRules = rules;
+    });
   });
 
-  function addNewRule() {
-    browser.declarativeNetRequest.getDynamicRules()
-      .then((rules) => {
-        return getNextId(rules);
-      })
-      .then((avaliableId) => {
-        return browser.declarativeNetRequest.updateDynamicRules({
-          addRules: [
-            {
-              id: avaliableId,
-              priority: 1,
-              action: {
-                type: "block",
-              },
-              condition: {
-                urlFilter: newFilterInput,
-                resourceTypes: ["main_frame"],
-              },
-            },
-          ],
-        });
+  function addRule() {
+    let ruleIds = dynamicRules.map((rule) => rule.id);
+    let largestId = ruleIds.length ? Math.max(...ruleIds) : 0;
+
+    let newRule = {
+      id: largestId + 1,
+      priority: 1,
+      action: { type: "block" },
+      condition: {
+        urlFilter: newFilterInput,
+        resourceTypes: ["main_frame"],
+      },
+    };
+
+    browser.declarativeNetRequest
+      .updateDynamicRules({
+        addRules: [newRule],
       })
       .then(() => {
-        filters.push(newFilterInput.toLowerCase());
-        newFilterInput = '';
+        dynamicRules.push(newRule);
+        newFilterInput = "";
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
       });
   }
-
-  function getNextId(rules) {
-    let maxRules = browser.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES;
-    let ruleIds = rules.map((rule) => rule.id);
-
-    if (ruleIds.length == 0) {
-      return 1;
-    }
-
-    let sortedIds = ruleIds.sort((a, b) => a - b);
-    let currentLargestId = Math.max(...sortedIds);
-    if (currentLargestId + 1 <= maxRules) {
-      return currentLargestId + 1;
-    }
-
-    throw new Error("No ID avaliable");
-  }
-
 </script>
 
 <main>
   <h1>Options Page</h1>
 
-  <div>
-    {#each filters as filter}
-      <p>{filter}</p>
-    {/each}
+  {#each dynamicRules as rule}
+    <p>{rule.condition.urlFilter}</p>
+  {:else}
+    <p>No rules set</p>
+  {/each}
 
-    <input type="text" placeholder="youtube.com" bind:value={newFilterInput} />
-    <button onclick={addNewRule}>Add</button>
+  <div>
+    <input placeholder="youtube.com" bind:value={newFilterInput} />
+    <button onclick={addRule}>Add</button>
   </div>
 </main>

@@ -80,9 +80,29 @@ function await_outside_boundary() {
     throw new Error(`https://svelte.dev/e/await_outside_boundary`);
   }
 }
+function lifecycle_outside_component(name) {
+  {
+    throw new Error(`https://svelte.dev/e/lifecycle_outside_component`);
+  }
+}
 function async_derived_orphan() {
   {
     throw new Error(`https://svelte.dev/e/async_derived_orphan`);
+  }
+}
+function effect_in_teardown(rune) {
+  {
+    throw new Error(`https://svelte.dev/e/effect_in_teardown`);
+  }
+}
+function effect_in_unowned_derived() {
+  {
+    throw new Error(`https://svelte.dev/e/effect_in_unowned_derived`);
+  }
+}
+function effect_orphan(rune) {
+  {
+    throw new Error(`https://svelte.dev/e/effect_orphan`);
   }
 }
 function effect_update_depth_exceeded() {
@@ -1171,6 +1191,17 @@ function clear_text_content(node) {
 function should_defer_append() {
   return false;
 }
+function validate_effect(rune) {
+  if (active_effect === null && active_reaction === null) {
+    effect_orphan();
+  }
+  if (active_reaction !== null && (active_reaction.f & UNOWNED) !== 0 && active_effect === null) {
+    effect_in_unowned_derived();
+  }
+  if (is_destroying_effect) {
+    effect_in_teardown();
+  }
+}
 function push_effect(effect, parent_effect) {
   var parent_last = parent_effect.last;
   if (parent_last === null) {
@@ -1229,6 +1260,23 @@ function create_effect(type, fn, sync, push2 = true) {
     }
   }
   return effect;
+}
+function user_effect(fn) {
+  validate_effect();
+  var flags = (
+    /** @type {Effect} */
+    active_effect.f
+  );
+  var defer = !active_reaction && (flags & BRANCH_EFFECT) !== 0 && (flags & EFFECT_RAN) === 0;
+  if (defer) {
+    var context = (
+      /** @type {ComponentContext} */
+      component_context
+    );
+    (context.e ??= []).push(fn);
+  } else {
+    return create_user_effect(fn);
+  }
 }
 function create_user_effect(fn) {
   return create_effect(EFFECT | USER_EFFECT, fn, false);
@@ -2480,68 +2528,77 @@ function is_numberlike_input(input) {
 function to_number(value) {
   return value === "" ? null : +value;
 }
+function onMount(fn) {
+  if (component_context === null) {
+    lifecycle_outside_component();
+  }
+  {
+    user_effect(() => {
+      const cleanup = untrack(fn);
+      if (typeof cleanup === "function") return (
+        /** @type {() => void} */
+        cleanup
+      );
+    });
+  }
+}
 const PUBLIC_VERSION = "5";
 if (typeof window !== "undefined") {
   ((window.__svelte ??= {}).v ??= /* @__PURE__ */ new Set()).add(PUBLIC_VERSION);
 }
-function addNewRule(_, getNextId, newFilterInput, filters) {
-  browser.declarativeNetRequest.getDynamicRules().then((rules) => {
-    return getNextId(rules);
-  }).then((avaliableId) => {
-    return browser.declarativeNetRequest.updateDynamicRules({
-      addRules: [
-        {
-          id: avaliableId,
-          priority: 1,
-          action: { type: "block" },
-          condition: {
-            urlFilter: get(newFilterInput),
-            resourceTypes: ["main_frame"]
-          }
-        }
-      ]
-    });
-  }).then(() => {
-    get(filters).push(get(newFilterInput).toLowerCase());
+function addRule(_, dynamicRules, newFilterInput) {
+  let ruleIds = get(dynamicRules).map((rule) => rule.id);
+  let largestId = ruleIds.length ? Math.max(...ruleIds) : 0;
+  let newRule = {
+    id: largestId + 1,
+    priority: 1,
+    action: { type: "block" },
+    condition: {
+      urlFilter: get(newFilterInput),
+      resourceTypes: ["main_frame"]
+    }
+  };
+  browser.declarativeNetRequest.updateDynamicRules({ addRules: [newRule] }).then(() => {
+    get(dynamicRules).push(newRule);
     set(newFilterInput, "");
-  }).catch((err) => {
-    console.log(err);
+  }).catch((error) => {
+    console.log(error);
   });
 }
 var root_1 = /* @__PURE__ */ from_html(`<p> </p>`);
-var root = /* @__PURE__ */ from_html(`<main><h1>Options Page</h1> <div><!> <input type="text" placeholder="youtube.com"/> <button>Add</button></div></main>`);
+var root_2 = /* @__PURE__ */ from_html(`<p>No rules set</p>`);
+var root = /* @__PURE__ */ from_html(`<main><h1>Options Page</h1> <!> <div><input placeholder="youtube.com"/> <button>Add</button></div></main>`);
 function Options($$anchor, $$props) {
   push($$props, true);
-  let filters = /* @__PURE__ */ state(void 0);
-  let newFilterInput = /* @__PURE__ */ state(void 0);
-  browser.declarativeNetRequest.getDynamicRules().then((rules) => {
-    set(filters, rules.map((rule) => rule.condition.urlFilter), true);
+  let dynamicRules = /* @__PURE__ */ state(proxy([]));
+  let newFilterInput = /* @__PURE__ */ state("");
+  onMount(() => {
+    browser.declarativeNetRequest.getDynamicRules().then((rules) => {
+      set(dynamicRules, rules, true);
+    });
   });
-  function getNextId(rules) {
-    let maxRules = browser.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES;
-    let ruleIds = rules.map((rule) => rule.id);
-    if (ruleIds.length == 0) {
-      return 1;
-    }
-    let sortedIds = ruleIds.sort((a, b) => a - b);
-    let currentLargestId = Math.max(...sortedIds);
-    if (currentLargestId + 1 <= maxRules) {
-      return currentLargestId + 1;
-    }
-    throw new Error("No ID avaliable");
-  }
   var main = root();
-  var div = sibling(child(main), 2);
-  var node = child(div);
-  each(node, 17, () => get(filters), index, ($$anchor2, filter) => {
-    var p = root_1();
-    var text = child(p);
-    template_effect(() => set_text(text, get(filter)));
-    append($$anchor2, p);
-  });
-  var input = sibling(node, 2);
+  var node = sibling(child(main), 2);
+  each(
+    node,
+    17,
+    () => get(dynamicRules),
+    index,
+    ($$anchor2, rule) => {
+      var p = root_1();
+      var text = child(p);
+      template_effect(() => set_text(text, get(rule).condition.urlFilter));
+      append($$anchor2, p);
+    },
+    ($$anchor2) => {
+      var p_1 = root_2();
+      append($$anchor2, p_1);
+    }
+  );
+  var div = sibling(node, 2);
+  var input = child(div);
   var button = sibling(input, 2);
-  button.__click = [addNewRule, getNextId, newFilterInput, filters];
+  button.__click = [addRule, dynamicRules, newFilterInput];
   bind_value(input, () => get(newFilterInput), ($$value) => set(newFilterInput, $$value));
   append($$anchor, main);
   pop();
