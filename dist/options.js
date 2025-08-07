@@ -2557,8 +2557,14 @@ function addRule(_, dynamicRules, filterInput) {
   let newRule = {
     id: largestId + 1,
     priority: 1,
-    action: { type: "block" },
-    condition: { urlFilter: get(filterInput), resourceTypes: ["main_frame"] }
+    action: {
+      type: "redirect",
+      redirect: { extensionPath: "/shield.html" }
+    },
+    condition: {
+      urlFilter: get(filterInput),
+      resourceTypes: ["main_frame", "sub_frame"]
+    }
   };
   browser.declarativeNetRequest.updateDynamicRules({ addRules: [newRule] }).then(() => {
     get(dynamicRules).push(newRule);

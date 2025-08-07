@@ -6,6 +6,15 @@
         "storage",
         "declarativeNetRequest"
     ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["shield.html"],
+            "matches": ["<all_urls>"]
+        }
+    ],
     "options_ui": {
         "page": "options.html",
         "open_in_tab": true

@@ -1,13 +1,26 @@
 {
-    "manifest_version": 3,
-    "name": "Ripsaw",
-    "version": "1.0",
-    "permissions": [
-        "storage",
-        "declarativeNetRequest"
-    ],
-    "options_ui": {
-        "page": "options.html",
-        "open_in_tab": true
+  "manifest_version": 3,
+  "name": "Ripsaw",
+  "version": "1.0",
+  "permissions": [
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "shield.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
 }

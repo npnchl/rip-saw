@@ -23,6 +23,7 @@ export default defineConfig({
       input: {
         background: resolve(__dirname, 'src/background.js'),
         options: resolve(__dirname, 'options.html'),
+        shield: resolve(__dirname, 'shield.html'),
       },
       output: {
         entryFileNames: '[name].js',

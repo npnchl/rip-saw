@@ -27,10 +27,18 @@
     let newRule = {
       id: largestId + 1,
       priority: 1,
-      action: { type: "block" },
+      action: { 
+        type: "redirect",
+        redirect: {
+          extensionPath: "/shield.html"
+        } 
+      },
       condition: {
         urlFilter: filterInput,
-        resourceTypes: ["main_frame"],
+        resourceTypes: [
+          "main_frame",
+          "sub_frame"
+        ],
       },
     };
 
